@@ -11,17 +11,108 @@
 
 <body>
 
-    <div class="container">
-        <button class="reset" @click="reset">Reset</button>
-        <div class="board"></div>
+    <div class="container w-full h-full flex flex-col justify-center items-center">
+        <button class="reset rounded px-3 py-2 m-8 bg-orange-800 text-white font-bold btn" @click="reset">Reset</button>
+        <div class="board w-[722px] h-[619px] flex  flex-wrap box-border border-2 bg-blue-400 border-gray-600 gap-[3px]"
+            x-data="initConnectFour">
+            <template x-for="(cell, index) in state">
+                <div class="cell w-[100px] h-[100px]">
+                    <div class="w-full h-full rounded-full border-2 border-blue-600 bg-white" @click.stop="clickCell"
+                        :data-row="cell[1]" :id="index">
+
+                    </div>
+                </div>
+
+            </template>
+        </div>
+        <p id="message" class="mt-8">
+            This should get replaced with something else
+        </p>
     </div>
 
     <script>
-        initConnectFour: () => {
+        function initConnectFour() {
             return {
-                board: [],
-                clickCell() { },
-                reset() { }
+                cells: 41,
+                state: [],
+                turn: null,
+                message: 'Start the game.',
+                init() {
+                    for (let i = 0; i <= this.cells; i++) {
+                        this.state[i] = ['', (i % 7), i];
+                    }
+                    this.setTurn();
+                },
+                setTurn() {
+                    if (this.turn) {
+                        this.turn = this.turn === 'red' ? 'blue' : 'red';
+                    } else {
+                        this.turn = Math.random() < 0.5 ? 'red' : 'blue';
+                    }
+                    this.message = `It is ${this.turn}'s turn to go.`;
+                    this.changeMessage();
+                },
+                clickCell(e) {
+                    const row = e.target.dataset.row;
+                    //console.log(this.getFirstEmptyCellInRow(row))
+                    //const index = this.getFirstEmptyCellInRow(row);
+                    if (typeof index !== 'undefined') {
+                        console.log(index)
+                        let cell = document.getElementById(index);
+                        console.log(cell);
+                        cell.classList.add(this.turn);
+                    }
+                    this.setTurn();
+                },
+                reset() {
+                    this.init();
+                    this.setTurn();
+                },
+                getFirstEmptyCellInRow(row) {
+                    let state = Array.from(this.state);
+                    state = state.slice().reverse();
+                    state.forEach((cell, index) => {
+                        if (cell[1] === parseInt(row) && cell[0] === '') {
+                            //console.log(index, cell[2]);
+                            return index;
+                        }
+                    })
+                },
+                isWinner(id) {
+                    // TODO: find if there is a touch four situation. From id there 
+                    // (-/+)1, (-/+)8, (-/+)7, (-/+)6 same color
+                    // Keep track of the number of same color cells if 4 the color is winner
+                    // Keep a same routine, stick to the two diagonals and keep track of the score, 
+                    // +6 until no longer same color as turn color then -6 score is not 4 then change 
+                    // to adding and subtracting 8 then adding or subtracting 6 and lastly adding 
+                    // or subtracting 1.
+                    let color = this.turn;
+                    let current = id;
+                    let score = 1;
+                    const operations = [1, 6, 7, 8];
+                    operations.forEach(operation => {
+                        while (this.state(current).color === this.turn) {
+                            current += operation;
+                            score++
+                        }
+                        while (this.state(current).color === this.turn) {
+                            current -= operation;
+                            score++
+                        }
+                        if (score === 4) {
+                            this.setWinner();
+                        } else {
+                            this.setTurn()
+                        }
+                    })
+                },
+                setWinner() {
+                    this.message = `The winner is ${this.turn}.`;
+                    this.changeMessage();
+                },
+                changeMessage() {
+                    document.getElementById('message').innerText = this.message;
+                }
             };
         }
 
